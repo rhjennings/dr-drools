@@ -20,12 +20,8 @@ package mx.dr.drools.conf;
 * Author: Jorge Luis Martinez Ramirez
 * Email: jorgemfk1@gmail.com
 */
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
-
-
 
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseConfiguration;
@@ -40,31 +36,30 @@ import org.drools.io.ResourceFactory;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.widget.Toast;
 
+@Deprecated
 public class DRKnowledgeBuilder {
-    public static void assetsToFiles(Context context, String assetfolder, String ext) throws IOException{
-    	AssetManager assetManager = context.getAssets(); 
-    	InputStream io;
-    	FileOutputStream  fOut;
-        byte[] buff = new byte[1024];
-        int bytesRead = 0;
-		for (String fname :assetManager.list(assetfolder)){
-			if (fname.endsWith(ext)){
-			  io=assetManager.open(assetfolder+"/"+fname);
-			  fOut = context.openFileOutput(fname,Context.MODE_WORLD_READABLE);
-	          while((bytesRead = io.read(buff)) != -1) {
-                fOut.write(buff,0, bytesRead);
-                
-	          }
-	          fOut.close();
-	          io.close();
-			}
-		}
-    }
+//    public static void assetsToFiles(Context context, String assetfolder, String ext) throws IOException{
+//    	AssetManager assetManager = context.getAssets(); 
+//    	InputStream io;
+//    	FileOutputStream  fOut;
+//        byte[] buff = new byte[1024];
+//        int bytesRead = 0;
+//		for (String fname :assetManager.list(assetfolder)){
+//			if (fname.endsWith(ext)){
+//			  io=assetManager.open(assetfolder+"/"+fname);
+//			  fOut = context.openFileOutput(fname,Context.MODE_WORLD_READABLE);
+//	          while((bytesRead = io.read(buff)) != -1) {
+//                fOut.write(buff,0, bytesRead);
+//                
+//	          }
+//	          fOut.close();
+//	          io.close();
+//			}
+//		}
+//    }
 	public static KnowledgeBase loadKnowledge(final Context context, String propspath, String knowlegpath, ResourceType type){
-		String pakage=context.getPackageName();
 		Properties props = new Properties();
 		try {
 			props.load(Dialect.class.getResourceAsStream(propspath));
@@ -83,7 +78,7 @@ public class DRKnowledgeBuilder {
 
 		System.setProperty("java.version", "1.5");
 		final KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(kbuilderConf);
-		((KnowledgeBuilderImpl)kbuilder).setPackage(pakage);
+		((KnowledgeBuilderImpl)kbuilder).setPackage(context.getPackageName());
 		
 		kbuilder.add(ResourceFactory.newClassPathResource(knowlegpath), type);
 		if( kbuilder.hasErrors() ) {

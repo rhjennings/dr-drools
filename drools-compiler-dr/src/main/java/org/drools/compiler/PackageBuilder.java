@@ -16,7 +16,7 @@
 
 package org.drools.compiler;
 
-//import java.beans.IntrospectionException;
+import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import mx.dr.drools.builder.KnowledgeLibBuilder;
+import mx.dr.drools.util.AndroidFileUtils;
 
 import org.drools.ChangeSet;
 import org.drools.PackageIntegrationException;
@@ -104,7 +104,6 @@ import org.drools.rule.TypeDeclaration;
 import org.drools.rule.builder.RuleBuildContext;
 import org.drools.rule.builder.RuleBuilder;
 import org.drools.rule.builder.dialect.DialectError;
-import org.drools.runtime.pipeline.impl.DroolsJaxbHelperProviderImpl;
 import org.drools.spi.InternalReadAccessor;
 import org.drools.type.DateFormats;
 import org.drools.type.DateFormatsImpl;
@@ -588,7 +587,7 @@ public class PackageBuilder {
                 ChangeSet changeSet = //reader.read( resource.getReader() );
                 		new ChangeSetImpl();
                 List<Resource> list= new ArrayList<Resource>();
-                InternalResource ir=new FileSystemResource(KnowledgeLibBuilder.INSTANCE.getFilePath());
+                InternalResource ir=new FileSystemResource(AndroidFileUtils.getFilePath());
                 ir.setResourceType(ResourceType.DRL);
                 list.add(ir);
                 ( (ChangeSetImpl) changeSet).setResourcesAdded(list);

@@ -27,9 +27,6 @@ import java.util.Properties;
 import org.drools.command.CommandService;
 import org.drools.core.util.ConfFileUtils;
 import org.drools.core.util.StringUtils;
-import org.drools.marshalling.ObjectMarshallingStrategy;
-import org.drools.marshalling.impl.ClassObjectMarshallingStrategyAcceptor;
-import org.drools.marshalling.impl.SerializablePlaceholderResolverStrategy;
 import org.drools.process.instance.WorkItemManagerFactory;
 import org.drools.runtime.Environment;
 import org.drools.runtime.KnowledgeSessionConfiguration;
@@ -50,400 +47,410 @@ import org.mvel2.MVEL;
 /**
  * SessionConfiguration
  *
- * A class to store Session related configuration. It must be used at session instantiation time
- * or not used at all.
- * This class will automatically load default values from system properties, so if you want to set
- * a default configuration value for all your new sessions, you can simply set the property as
- * a System property.
+ * A class to store Session related configuration. It must be used at session
+ * instantiation time or not used at all. This class will automatically load
+ * default values from system properties, so if you want to set a default
+ * configuration value for all your new sessions, you can simply set the
+ * property as a System property.
  *
- * After the Session is created, it makes the configuration immutable and there is no way to make it
- * mutable again. This is to avoid inconsistent behavior inside session.
+ * After the Session is created, it makes the configuration immutable and there
+ * is no way to make it mutable again. This is to avoid inconsistent behavior
+ * inside session.
  *
  * NOTE: This API is under review and may change in the future.
  * 
  * 
- * drools.keepReference = <true|false>
- * drools.clockType = <pseudo|realtime|heartbeat|implicit>
+ * drools.keepReference = <true|false> drools.clockType =
+ * <pseudo|realtime|heartbeat|implicit>
  */
-public class SessionConfiguration
-    implements
-    KnowledgeSessionConfiguration,
-    Externalizable {
-    private static final long              serialVersionUID = 510l;
+public class SessionConfiguration implements KnowledgeSessionConfiguration,
+		Externalizable {
+	private static final long serialVersionUID = 510l;
 
-    private ChainedProperties              chainedProperties;
+	private ChainedProperties chainedProperties;
 
-    private volatile boolean               immutable;
+	private volatile boolean immutable;
 
-    private boolean                        keepReference;
+	private boolean keepReference;
 
-    private ClockType                      clockType;
+	private ClockType clockType;
 
-    private QueryListenerOption            queryListener;
+	private QueryListenerOption queryListener;
 
-    private Map<String, WorkItemHandler>   workItemHandlers;
-    private WorkItemManagerFactory         workItemManagerFactory;
-    private CommandService                 commandService;
+	private Map<String, WorkItemHandler> workItemHandlers;
+	private WorkItemManagerFactory workItemManagerFactory;
+	private CommandService commandService;
 
-    private transient CompositeClassLoader classLoader;
+	private transient CompositeClassLoader classLoader;
 
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject( chainedProperties );
-        out.writeBoolean( immutable );
-        out.writeBoolean( keepReference );
-        out.writeObject( clockType );
-        out.writeObject( queryListener );
-    }
-    
-    private static final SessionConfiguration defaultInstance = new SessionConfiguration();
-    
-    public static SessionConfiguration getDefaultInstance() {
-        return defaultInstance;
-    }
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(chainedProperties);
+		out.writeBoolean(immutable);
+		out.writeBoolean(keepReference);
+		out.writeObject(clockType);
+		out.writeObject(queryListener);
+	}
 
-    @SuppressWarnings("unchecked")
-    public void readExternal(ObjectInput in) throws IOException,
-                                            ClassNotFoundException {
-        chainedProperties = (ChainedProperties) in.readObject();
-        immutable = in.readBoolean();
-        keepReference = in.readBoolean();
-        clockType = (ClockType) in.readObject();
-        queryListener = (QueryListenerOption) in.readObject();
-    }
+	private static final SessionConfiguration defaultInstance = new SessionConfiguration();
 
-    /**
-     * Creates a new session configuration using the provided properties
-     * as configuration options. 
-     *
-     * @param properties
-     */
-    public SessionConfiguration(Properties properties) {
-        init( properties,
-              null );
-    }
+	public static SessionConfiguration getDefaultInstance() {
+		return defaultInstance;
+	}
 
-    /**
-     * Creates a new session configuration with default configuration options.
-     */
-    public SessionConfiguration() {
-        init( null,
-              null );
-    }
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		chainedProperties = (ChainedProperties) in.readObject();
+		immutable = in.readBoolean();
+		keepReference = in.readBoolean();
+		clockType = (ClockType) in.readObject();
+		queryListener = (QueryListenerOption) in.readObject();
+	}
 
-    public SessionConfiguration(ClassLoader... classLoader) {
-        init( null,
-              classLoader );
-    }
+	/**
+	 * Creates a new session configuration using the provided properties as
+	 * configuration options.
+	 *
+	 * @param properties
+	 */
+	public SessionConfiguration(Properties properties) {
+		init(properties, null);
+	}
 
-    private void init(Properties properties,
-                      ClassLoader... classLoader) {
-        this.classLoader = ClassLoaderUtil.getClassLoader( classLoader,
-                                                           getClass(),
-                                                           false );
+	/**
+	 * Creates a new session configuration with default configuration options.
+	 */
+	public SessionConfiguration() {
+		init(null, null);
+	}
 
-        this.immutable = false;
-        this.chainedProperties = new ChainedProperties( "session.conf",
-                                                        this.classLoader );
+	public SessionConfiguration(ClassLoader... classLoader) {
+		init(null, classLoader);
+	}
 
-        if ( properties != null ) {
-            this.chainedProperties.addProperties( properties );
-        }
+	private void init(Properties properties, ClassLoader... classLoader) {
+		this.classLoader = ClassLoaderUtil.getClassLoader(classLoader,
+				getClass(), false);
 
-        setKeepReference( Boolean.valueOf( this.chainedProperties.getProperty( KeepReferenceOption.PROPERTY_NAME,
-                                                                               "true" ) ).booleanValue() );
+		this.immutable = false;
+		this.chainedProperties = new ChainedProperties("session.conf",
+				this.classLoader);
 
-        setClockType( ClockType.resolveClockType( this.chainedProperties.getProperty( ClockTypeOption.PROPERTY_NAME,
-                                                                                      ClockType.REALTIME_CLOCK.getId() ) ) );
+		if (properties != null) {
+			this.chainedProperties.addProperties(properties);
+		}
 
-        setQueryListenerClass( this.chainedProperties.getProperty( QueryListenerOption.PROPERTY_NAME,
-                                                                   QueryListenerOption.STANDARD.getAsString() ) );
-    }
+		setKeepReference(Boolean.valueOf(
+				this.chainedProperties.getProperty(
+						KeepReferenceOption.PROPERTY_NAME, "true"))
+				.booleanValue());
 
-    public void addProperties(Properties properties) {
-        if ( properties != null ) {
-            this.chainedProperties.addProperties( properties );
-        }
-    }
+		setClockType(ClockType.resolveClockType(this.chainedProperties
+				.getProperty(ClockTypeOption.PROPERTY_NAME,
+						ClockType.REALTIME_CLOCK.getId())));
 
-    public void setProperty(String name,
-                            String value) {
-        name = name.trim();
-        if ( StringUtils.isEmpty( name ) ) {
-            return;
-        }
+		setQueryListenerClass(this.chainedProperties.getProperty(
+				QueryListenerOption.PROPERTY_NAME,
+				QueryListenerOption.STANDARD.getAsString()));
+	}
 
-        if ( name.equals( KeepReferenceOption.PROPERTY_NAME ) ) {
-            setKeepReference( StringUtils.isEmpty( value ) ? true : Boolean.parseBoolean( value ) );
-        } else if ( name.equals( ClockTypeOption.PROPERTY_NAME ) ) {
-            setClockType( ClockType.resolveClockType( StringUtils.isEmpty( value ) ? "realtime" : value ) );
-        } else if ( name.equals( QueryListenerOption.PROPERTY_NAME ) ) {
-            setQueryListenerClass( StringUtils.isEmpty( value ) ? QueryListenerOption.STANDARD.getAsString() : value );
-        }
-    }
+	public void addProperties(Properties properties) {
+		if (properties != null) {
+			this.chainedProperties.addProperties(properties);
+		}
+	}
 
-    public String getProperty(String name) {
-        name = name.trim();
-        if ( StringUtils.isEmpty( name ) ) {
-            return null;
-        }
+	public void setProperty(String name, String value) {
+		name = name.trim();
+		if (StringUtils.isEmpty(name)) {
+			return;
+		}
 
-        if ( name.equals( KeepReferenceOption.PROPERTY_NAME ) ) {
-            return Boolean.toString( this.keepReference );
-        } else if ( name.equals( ClockTypeOption.PROPERTY_NAME ) ) {
-            return this.clockType.toExternalForm();
-        } else if ( name.equals( QueryListenerOption.PROPERTY_NAME ) ) {
-            return this.queryListener.getAsString();
-        }
-        return null;
-    }
+		if (name.equals(KeepReferenceOption.PROPERTY_NAME)) {
+			setKeepReference(StringUtils.isEmpty(value) ? true : Boolean
+					.parseBoolean(value));
+		} else if (name.equals(ClockTypeOption.PROPERTY_NAME)) {
+			setClockType(ClockType
+					.resolveClockType(StringUtils.isEmpty(value) ? "realtime"
+							: value));
+		} else if (name.equals(QueryListenerOption.PROPERTY_NAME)) {
+			setQueryListenerClass(StringUtils.isEmpty(value) ? QueryListenerOption.STANDARD
+					.getAsString() : value);
+		}
+	}
 
-    /**
-     * Makes the configuration object immutable. Once it becomes immutable,
-     * there is no way to make it mutable again.
-     * This is done to keep consistency.
-     */
-    public void makeImmutable() {
-        this.immutable = true;
-    }
+	public String getProperty(String name) {
+		name = name.trim();
+		if (StringUtils.isEmpty(name)) {
+			return null;
+		}
 
-    /**
-     * Returns true if this configuration object is immutable or false otherwise.
-     * @return
-     */
-    public boolean isImmutable() {
-        return this.immutable;
-    }
+		if (name.equals(KeepReferenceOption.PROPERTY_NAME)) {
+			return Boolean.toString(this.keepReference);
+		} else if (name.equals(ClockTypeOption.PROPERTY_NAME)) {
+			return this.clockType.toExternalForm();
+		} else if (name.equals(QueryListenerOption.PROPERTY_NAME)) {
+			return this.queryListener.getAsString();
+		}
+		return null;
+	}
 
-    private void checkCanChange() {
-        if ( this.immutable ) {
-            throw new UnsupportedOperationException( "Can't set a property after configuration becomes immutable" );
-        }
-    }
+	/**
+	 * Makes the configuration object immutable. Once it becomes immutable,
+	 * there is no way to make it mutable again. This is done to keep
+	 * consistency.
+	 */
+	public void makeImmutable() {
+		this.immutable = true;
+	}
 
-    public void setKeepReference(boolean keepReference) {
-        checkCanChange(); // throws an exception if a change isn't possible;
-        this.keepReference = keepReference;
-    }
+	/**
+	 * Returns true if this configuration object is immutable or false
+	 * otherwise.
+	 * 
+	 * @return
+	 */
+	public boolean isImmutable() {
+		return this.immutable;
+	}
 
-    public boolean isKeepReference() {
-        return this.keepReference;
-    }
+	private void checkCanChange() {
+		if (this.immutable) {
+			throw new UnsupportedOperationException(
+					"Can't set a property after configuration becomes immutable");
+		}
+	}
 
-    public ClockType getClockType() {
-        return clockType;
-    }
+	public void setKeepReference(boolean keepReference) {
+		checkCanChange(); // throws an exception if a change isn't possible;
+		this.keepReference = keepReference;
+	}
 
-    public void setClockType(ClockType clockType) {
-        checkCanChange(); // throws an exception if a change isn't possible;
-        this.clockType = clockType;
-    }
+	public boolean isKeepReference() {
+		return this.keepReference;
+	}
 
-    @SuppressWarnings("unchecked")
-    private void setQueryListenerClass(String property) {
-        checkCanChange();
-        this.queryListener = QueryListenerOption.determineQueryListenerClassOption( property );
-    }
+	public ClockType getClockType() {
+		return clockType;
+	}
 
-    private void setQueryListenerClass(QueryListenerOption option) {
-        checkCanChange();
-        this.queryListener = option;
-    }
+	public void setClockType(ClockType clockType) {
+		checkCanChange(); // throws an exception if a change isn't possible;
+		this.clockType = clockType;
+	}
 
-    public Map<String, WorkItemHandler> getWorkItemHandlers() {
-        if ( this.workItemHandlers == null ) {
-            initWorkItemHandlers();
-        }
-        return this.workItemHandlers;
+	private void setQueryListenerClass(String property) {
+		checkCanChange();
+		this.queryListener = QueryListenerOption
+				.determineQueryListenerClassOption(property);
+	}
 
-    }
+//	private void setQueryListenerClass(QueryListenerOption option) {
+//		checkCanChange();
+//		this.queryListener = option;
+//	}
 
-    private void initWorkItemHandlers() {
-        this.workItemHandlers = new HashMap<String, WorkItemHandler>();
+	public Map<String, WorkItemHandler> getWorkItemHandlers() {
+		if (this.workItemHandlers == null) {
+			initWorkItemHandlers();
+		}
+		return this.workItemHandlers;
 
-        // split on each space
-        String locations[] = this.chainedProperties.getProperty( "drools.workItemHandlers",
-                                                                 "" ).split( "\\s" );
+	}
 
-        // load each SemanticModule
-        for ( String factoryLocation : locations ) {
-            // trim leading/trailing spaces and quotes
-            factoryLocation = factoryLocation.trim();
-            if ( factoryLocation.startsWith( "\"" ) ) {
-                factoryLocation = factoryLocation.substring( 1 );
-            }
-            if ( factoryLocation.endsWith( "\"" ) ) {
-                factoryLocation = factoryLocation.substring( 0,
-                                                             factoryLocation.length() - 1 );
-            }
-            if ( !factoryLocation.equals( "" ) ) {
-                loadWorkItemHandlers( factoryLocation );
-            }
-        }
-    }
+	private void initWorkItemHandlers() {
+		this.workItemHandlers = new HashMap<String, WorkItemHandler>();
 
-    @SuppressWarnings("unchecked")
-    private void loadWorkItemHandlers(String location) {
-        String content = ConfFileUtils.URLContentsToString( ConfFileUtils.getURL( location,
-                                                                                  null,
-                                                                                  RuleBaseConfiguration.class ) );
-        Map<String, WorkItemHandler> workItemHandlers = (Map<String, WorkItemHandler>) MVEL.eval( content,
-                                                                                                  new HashMap() );
-        this.workItemHandlers.putAll( workItemHandlers );
-    }
+		// split on each space
+		String locations[] = this.chainedProperties.getProperty(
+				"drools.workItemHandlers", "").split("\\s");
 
-    public WorkItemManagerFactory getWorkItemManagerFactory() {
-        if ( this.workItemManagerFactory == null ) {
-            initWorkItemManagerFactory();
-        }
-        return this.workItemManagerFactory;
-    }
+		// load each SemanticModule
+		for (String factoryLocation : locations) {
+			// trim leading/trailing spaces and quotes
+			factoryLocation = factoryLocation.trim();
+			if (factoryLocation.startsWith("\"")) {
+				factoryLocation = factoryLocation.substring(1);
+			}
+			if (factoryLocation.endsWith("\"")) {
+				factoryLocation = factoryLocation.substring(0,
+						factoryLocation.length() - 1);
+			}
+			if (!factoryLocation.equals("")) {
+				loadWorkItemHandlers(factoryLocation);
+			}
+		}
+	}
 
-    @SuppressWarnings("unchecked")
-    private void initWorkItemManagerFactory() {
-        String className = this.chainedProperties.getProperty( "drools.workItemManagerFactory",
-                                                               "org.drools.process.instance.impl.DefaultWorkItemManagerFactory" );
-        Class<WorkItemManagerFactory> clazz = null;
-        try {
-            clazz = (Class<WorkItemManagerFactory>) this.classLoader.loadClass( className );
-        } catch ( ClassNotFoundException e ) {
-        }
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void loadWorkItemHandlers(String location) {
+		String content = ConfFileUtils.URLContentsToString(ConfFileUtils
+				.getURL(location, null, RuleBaseConfiguration.class));
+		Map<String, WorkItemHandler> workItemHandlers = (Map<String, WorkItemHandler>) MVEL
+				.eval(content, new HashMap());
+		this.workItemHandlers.putAll(workItemHandlers);
+	}
 
-        if ( clazz != null ) {
-            try {
-                this.workItemManagerFactory = clazz.newInstance();
-            } catch ( Exception e ) {
-                throw new IllegalArgumentException( "Unable to instantiate work item manager factory '" + className + "'",
-                                                    e );
-            }
-        } else {
-            throw new IllegalArgumentException( "Work item manager factory '" + className + "' not found" );
-        }
-    }
+	public WorkItemManagerFactory getWorkItemManagerFactory() {
+		if (this.workItemManagerFactory == null) {
+			initWorkItemManagerFactory();
+		}
+		return this.workItemManagerFactory;
+	}
 
-    public String getProcessInstanceManagerFactory() {
-        return this.chainedProperties.getProperty( "drools.processInstanceManagerFactory",
-                                                   "org.jbpm.process.instance.impl.DefaultProcessInstanceManagerFactory" );
-    }
+	@SuppressWarnings("unchecked")
+	private void initWorkItemManagerFactory() {
+		String className = this.chainedProperties
+				.getProperty("drools.workItemManagerFactory",
+						"org.drools.process.instance.impl.DefaultWorkItemManagerFactory");
+		Class<WorkItemManagerFactory> clazz = null;
+		try {
+			clazz = (Class<WorkItemManagerFactory>) this.classLoader
+					.loadClass(className);
+		} catch (ClassNotFoundException e) {
+		}
 
-    public String getSignalManagerFactory() {
-        return this.chainedProperties.getProperty( "drools.processSignalManagerFactory",
-                                                   "org.jbpm.process.instance.event.DefaultSignalManagerFactory" );
-    }
+		if (clazz != null) {
+			try {
+				this.workItemManagerFactory = clazz.newInstance();
+			} catch (Exception e) {
+				throw new IllegalArgumentException(
+						"Unable to instantiate work item manager factory '"
+								+ className + "'", e);
+			}
+		} else {
+			throw new IllegalArgumentException("Work item manager factory '"
+					+ className + "' not found");
+		}
+	}
 
-    public CommandService getCommandService(KnowledgeBase kbase,
-                                            Environment environment) {
-        if ( this.commandService == null ) {
-            initCommandService( kbase,
-                                environment );
-        }
-        return this.commandService;
-    }
+	public String getProcessInstanceManagerFactory() {
+		return this.chainedProperties
+				.getProperty("drools.processInstanceManagerFactory",
+						"org.jbpm.process.instance.impl.DefaultProcessInstanceManagerFactory");
+	}
 
-    @SuppressWarnings("unchecked")
-    private void initCommandService(KnowledgeBase kbase,
-                                    Environment environment) {
-        String className = this.chainedProperties.getProperty( "drools.commandService",
-                                                               null );
-        if ( className == null ) {
-            return;
-        }
+	public String getSignalManagerFactory() {
+		return this.chainedProperties.getProperty(
+				"drools.processSignalManagerFactory",
+				"org.jbpm.process.instance.event.DefaultSignalManagerFactory");
+	}
 
-        Class<CommandService> clazz = null;
-        try {
-            clazz = (Class<CommandService>) this.classLoader.loadClass( className );
-        } catch ( ClassNotFoundException e ) {
-        }
+	public CommandService getCommandService(KnowledgeBase kbase,
+			Environment environment) {
+		if (this.commandService == null) {
+			initCommandService(kbase, environment);
+		}
+		return this.commandService;
+	}
 
-        if ( clazz != null ) {
-            try {
-                this.commandService = clazz.getConstructor( KnowledgeBase.class,
-                                                            KnowledgeSessionConfiguration.class,
-                                                            Environment.class ).newInstance( kbase,
-                                                                                             this,
-                                                                                             environment );
-            } catch ( Exception e ) {
-                throw new IllegalArgumentException( "Unable to instantiate command service '" + className + "'",
-                                                    e );
-            }
-        } else {
-            throw new IllegalArgumentException( "Command service '" + className + "' not found" );
-        }
-    }
+	@SuppressWarnings("unchecked")
+	private void initCommandService(KnowledgeBase kbase, Environment environment) {
+		String className = this.chainedProperties.getProperty(
+				"drools.commandService", null);
+		if (className == null) {
+			return;
+		}
 
-    public TimerService newTimerService() {
-        String className = this.chainedProperties.getProperty(
-                                                               "drools.timerService",
-                                                               "org.drools.time.impl.JDKTimerService" );
-        if ( className == null ) {
-            return null;
-        }
+		Class<CommandService> clazz = null;
+		try {
+			clazz = (Class<CommandService>) this.classLoader
+					.loadClass(className);
+		} catch (ClassNotFoundException e) {
+		}
 
-        Class<TimerService> clazz = null;
-        try {
-            clazz = (Class<TimerService>) this.classLoader.loadClass( className );
-        } catch ( ClassNotFoundException e ) {
-        }
+		if (clazz != null) {
+			try {
+				this.commandService = clazz.getConstructor(KnowledgeBase.class,
+						KnowledgeSessionConfiguration.class, Environment.class)
+						.newInstance(kbase, this, environment);
+			} catch (Exception e) {
+				throw new IllegalArgumentException(
+						"Unable to instantiate command service '" + className
+								+ "'", e);
+			}
+		} else {
+			throw new IllegalArgumentException("Command service '" + className
+					+ "' not found");
+		}
+	}
 
-        if ( clazz != null ) {
-            try {
-                return clazz.newInstance();
-            } catch ( Exception e ) {
-                throw new IllegalArgumentException(
-                                                    "Unable to instantiate timer service '" + className
-                                                            + "'",
-                                                    e );
-            }
-        } else {
-            throw new IllegalArgumentException( "Timer service '" + className
-                                                + "' not found" );
-        }
-    }
+	@SuppressWarnings("unchecked")
+	public TimerService newTimerService() {
+		String className = this.chainedProperties.getProperty(
+				"drools.timerService", "org.drools.time.impl.JDKTimerService");
+		if (className == null) {
+			return null;
+		}
 
-    @SuppressWarnings("unchecked")
-    public <T extends SingleValueKnowledgeSessionOption> T getOption(Class<T> option) {
-        if ( ClockTypeOption.class.equals( option ) ) {
-            return (T) ClockTypeOption.get( getClockType().toExternalForm() );
-        } else if ( KeepReferenceOption.class.equals( option ) ) {
-            return (T) (this.keepReference ? KeepReferenceOption.YES : KeepReferenceOption.NO);
-        } else if ( QueryListenerOption.class.equals( option ) ) {
-            return (T) this.queryListener;
-        }
-        return null;
-    }
+		Class<TimerService> clazz = null;
+		try {
+			clazz = (Class<TimerService>) this.classLoader.loadClass(className);
+		} catch (ClassNotFoundException e) {
+		}
 
-    @SuppressWarnings("unchecked")
-    public <T extends MultiValueKnowledgeSessionOption> T getOption(Class<T> option,
-                                                                    String key) {
-        if ( WorkItemHandlerOption.class.equals( option ) ) {
-            return (T) WorkItemHandlerOption.get( key,
-                                                  getWorkItemHandlers().get( key ) );
-        }
-        return null;
-    }
+		if (clazz != null) {
+			try {
+				return clazz.newInstance();
+			} catch (Exception e) {
+				throw new IllegalArgumentException(
+						"Unable to instantiate timer service '" + className
+								+ "'", e);
+			}
+		} else {
+			throw new IllegalArgumentException("Timer service '" + className
+					+ "' not found");
+		}
+	}
 
-    public <T extends KnowledgeSessionOption> void setOption(T option) {
-        if ( option instanceof ClockTypeOption ) {
-            setClockType( ClockType.resolveClockType( ((ClockTypeOption) option).getClockType() ) );
-        } else if ( option instanceof KeepReferenceOption ) {
-            setKeepReference( ((KeepReferenceOption) option).isKeepReference() );
-        } else if ( option instanceof WorkItemHandlerOption ) {
-            getWorkItemHandlers().put( ((WorkItemHandlerOption) option).getName(),
-                                       ((WorkItemHandlerOption) option).getHandler() );
-        } else if ( option instanceof QueryListenerOption ) {
-            this.queryListener = (QueryListenerOption) option;
-        }
-    }
+	@SuppressWarnings("unchecked")
+	public <T extends SingleValueKnowledgeSessionOption> T getOption(
+			Class<T> option) {
+		if (ClockTypeOption.class.equals(option)) {
+			return (T) ClockTypeOption.get(getClockType().toExternalForm());
+		} else if (KeepReferenceOption.class.equals(option)) {
+			return (T) (this.keepReference ? KeepReferenceOption.YES
+					: KeepReferenceOption.NO);
+		} else if (QueryListenerOption.class.equals(option)) {
+			return (T) this.queryListener;
+		}
+		return null;
+	}
 
-    public ClassLoader getClassLoader() {
-        return this.classLoader.clone();
-    }
+	@SuppressWarnings("unchecked")
+	public <T extends MultiValueKnowledgeSessionOption> T getOption(
+			Class<T> option, String key) {
+		if (WorkItemHandlerOption.class.equals(option)) {
+			return (T) WorkItemHandlerOption.get(key, getWorkItemHandlers()
+					.get(key));
+		}
+		return null;
+	}
 
-    public void setClassLoader(CompositeClassLoader classLoader) {
-        this.classLoader = classLoader;
-    }
+	public <T extends KnowledgeSessionOption> void setOption(T option) {
+		if (option instanceof ClockTypeOption) {
+			setClockType(ClockType.resolveClockType(((ClockTypeOption) option)
+					.getClockType()));
+		} else if (option instanceof KeepReferenceOption) {
+			setKeepReference(((KeepReferenceOption) option).isKeepReference());
+		} else if (option instanceof WorkItemHandlerOption) {
+			getWorkItemHandlers().put(
+					((WorkItemHandlerOption) option).getName(),
+					((WorkItemHandlerOption) option).getHandler());
+		} else if (option instanceof QueryListenerOption) {
+			this.queryListener = (QueryListenerOption) option;
+		}
+	}
 
-    public QueryListenerOption getQueryListenerOption() {
-        return this.queryListener;
-    }
+	public ClassLoader getClassLoader() {
+		return this.classLoader.clone();
+	}
+
+	public void setClassLoader(CompositeClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+
+	public QueryListenerOption getQueryListenerOption() {
+		return this.queryListener;
+	}
 
 }

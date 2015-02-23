@@ -27,6 +27,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import mx.dr.drools.builder.KnowledgeLibBuilder;
+import mx.dr.drools.generator.DRDroolsApkGenerator;
+import mx.dr.drools.util.AndroidFileUtils;
+import mx.dr.drools.util.AndroidTargetUtils;
 
 import org.drools.RuntimeDroolsException;
 import org.drools.core.util.asm.ClassFieldInspector;
@@ -247,21 +250,23 @@ public class ClassFieldAccessorCache {
                                 0,
                                 bytes.length,
                                 domain );*/
-        	String base=KnowledgeLibBuilder.INSTANCE.getFilePath();
+        	String base=AndroidFileUtils.getFilePath();
         	String chain=base+name+".apk";
         	File file= new File(chain);
         	try{
         		if (!file.exists()){
         			DexOptions dexOptions=new DexOptions();
-        			dexOptions.targetApiLevel=KnowledgeLibBuilder.INSTANCE.getTargetVersion();
+        			dexOptions.targetApiLevel = AndroidTargetUtils.getTargetVersion();
         			DexFile dex = new DexFile(dexOptions);
-        			ClassDefItem item=CfTranslator.translate(
-        					name.replace('.',  '/')+".class", 
+        			ClassDefItem item = CfTranslator.translate(
+        					name.replace('.',  '/') + ".class", 
         					bytes, 
         					new CfOptions(), 
         					dexOptions);
         			dex.add(item);
-        			KnowledgeLibBuilder.INSTANCE.buildApk(file, dex);
+        			DRDroolsApkGenerator generator = DRDroolsApkGenerator.newGenerator().withFile(file).withDexFile(dex);
+        			generator.generate();
+//        			KnowledgeLibBuilder.INSTANCE.buildApk(file, dex);
         		}
         		DexClassLoader loader= new DexClassLoader(chain, 
         				base, 

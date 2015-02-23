@@ -80,7 +80,8 @@ public interface StatelessSession extends WorkingMemoryEventManager {
      * This will assert the list of facts as SEPARATE facts to the engine
      * (NOT as a List).
      */        
-    void execute(Collection collection);
+    @SuppressWarnings("rawtypes")
+	void execute(Collection collection);
     
     /**
      * This will assert the object in the background. This is
@@ -98,7 +99,8 @@ public interface StatelessSession extends WorkingMemoryEventManager {
      * This will assert the object List (as SEPARATE facts) in the background. This is
      * "send and forget" execution.
      */    
-    void asyncExecute(Collection collection);
+    @SuppressWarnings("rawtypes")
+	void asyncExecute(Collection collection);
     
     
     /**
@@ -117,5 +119,6 @@ public interface StatelessSession extends WorkingMemoryEventManager {
      * Similar to the normal execute method, but this will return
      * "results". 
      */   
-    StatelessSessionResult executeWithResults(Collection collection);
+    @SuppressWarnings("rawtypes")
+	StatelessSessionResult executeWithResults(Collection collection);
 }

@@ -48,7 +48,8 @@ public interface WorkingMemoryEventManager
      * 
      * @return listeners The listeners.
      */
-    public List getWorkingMemoryEventListeners();
+    @SuppressWarnings("rawtypes")
+	public List getWorkingMemoryEventListeners();
 
     /**
      * Add an event listener.
@@ -71,6 +72,7 @@ public interface WorkingMemoryEventManager
      * 
      * @return listeners The listeners.
      */
-    public List getAgendaEventListeners();
+    @SuppressWarnings("rawtypes")
+	public List getAgendaEventListeners();
 
 }

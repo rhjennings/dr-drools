@@ -20,48 +20,40 @@ package mx.dr.drools.builder;
 * Author: Jorge Luis Martinez Ramirez
 * Email: jorgemfk1@gmail.com
 */
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-import com.android.dx.dex.file.DexFile;
-
+@Deprecated
 public enum KnowledgeLibBuilder {
      INSTANCE;
-     private int targetVersion=8;
-     private String pakage;
-     private String filepath;
+//     private int targetVersion=8;
+//     private String pakage;
+//     private String filepath;
 
-	public void setPakage(String pakage) {
-		this.pakage = pakage;
-		this.filepath="/data/data/"+pakage+"/files/";
-	}
+//	public void setPakage(String pakage) {
+//		this.pakage = pakage;
+//		this.filepath="/data/data/"+pakage+"/files/";
+//	}
 
-	public String getFilePath() {
-		return filepath;
-	}
+//	public String getFilePath() {
+//		return filepath;
+//	}
 
-	public int getTargetVersion() {
-		return targetVersion;
-	}
-
-	public void setTargetVersion(int targetVersion) {
-		this.targetVersion = targetVersion;
-	}
+//	public int getTargetVersion() {
+//		return targetVersion;
+//	}
+//
+//	public void setTargetVersion(int targetVersion) {
+//		this.targetVersion = targetVersion;
+//	}
 	
-	public void buildApk(File file, DexFile dex) throws IOException{
-
-		ZipOutputStream zos;
-
-		zos=new ZipOutputStream(new FileOutputStream(file));
-		ZipEntry entry=new ZipEntry("classes.dex");
-		zos.putNextEntry(entry);
-		dex.writeTo(zos, null, false);
-		zos.closeEntry();
-		zos.close();
-	}
-	
-     
+//	public void buildApk(File file, DexFile dex) throws IOException{
+//
+//		ZipOutputStream zos;
+//
+//		zos=new ZipOutputStream(new FileOutputStream(file));
+//		ZipEntry entry=new ZipEntry("classes.dex");
+//		zos.putNextEntry(entry);
+//		dex.writeTo(zos, null, false);
+//		zos.closeEntry();
+//		zos.close();
+//	}
 }

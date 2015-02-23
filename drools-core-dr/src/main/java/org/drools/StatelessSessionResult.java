@@ -33,7 +33,8 @@ public interface StatelessSessionResult {
      * @return
      *       java.util.Iterators.
      */
-    Iterator iterateObjects();
+    @SuppressWarnings("rawtypes")
+	Iterator iterateObjects();
     
     /**
      * Iterate only those objects that match the provided ObjectFilter.
@@ -42,7 +43,8 @@ public interface StatelessSessionResult {
      * @return
      *             java.util.Iterators.
      */
-    Iterator iterateObjects(org.drools.runtime.ObjectFilter filter);
+    @SuppressWarnings("rawtypes")
+	Iterator iterateObjects(org.drools.runtime.ObjectFilter filter);
     
     /**
      * Retrieve the QueryResults of the specified query.

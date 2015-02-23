@@ -74,7 +74,8 @@ public interface StatefulSession
      * insertion task to take effect (a new thread may be created).
      * If you are not sure, then you probably don't need to use it !
      */
-    Future asyncInsert(Collection collect);
+    @SuppressWarnings("rawtypes")
+	Future asyncInsert(Collection collect);
 
     /**
      * This will initiate the firing phase (in the background).
@@ -90,7 +91,8 @@ public interface StatefulSession
      */
     Future asyncFireAllRules(AgendaFilter agendaFilter);
 
-    List getRuleBaseUpdateListeners();
+    @SuppressWarnings("rawtypes")
+	List getRuleBaseUpdateListeners();
     
     /**
      * Keeps firing activations until a halt is called. If in a given moment,

@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.drools;
-
 
 /**
  * Filters Objects by Class, only accepting Classes of the specified type
  */
 public class ClassObjectFilter extends  org.drools.runtime.ClassObjectFilter {
-
-    public ClassObjectFilter(Class clazz) {
+    @SuppressWarnings("rawtypes")
+	public ClassObjectFilter(Class clazz) {
         super( clazz );
     }
-
-    
 }
